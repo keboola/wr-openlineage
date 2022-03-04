@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+namespace Keboola\OpenLineageWriter;
+
 use Keboola\Component\Logger;
 use Keboola\Component\UserException;
-use MyComponent\Component;
+use Throwable;
 
 require __DIR__ . '/../vendor/autoload.php';
 

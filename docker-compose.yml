@@ -1,7 +1,64 @@
-version: '3'
+version: '3.7'
 services:
+  tests: &tests
+    build:
+      context: .
+      dockerfile: Dockerfile
+#    volumes:
+#      - ssh-keys:/root/.ssh:ro
+    environment:
+      - KBC_URL=${STORAGE_API_URL}
+      - KBC_TOKEN=${STORAGE_API_TOKEN}
+      - OPENLINEAGE_API=http://marquez-api:6000
+    depends_on:
+      - marquez-api
+
   dev:
-    build: .
+    <<: *tests
     volumes:
       - ./:/code
       - ./data:/data
+
+  marquez-api:
+    image: "marquezproject/marquez:latest"
+    container_name: marquez-api
+    environment:
+      - MARQUEZ_PORT=6000
+      - MARQUEZ_ADMIN_PORT=6001
+    ports:
+      - "6000:6000"
+      - "6001:6001"
+    volumes:
+      - ./docker/wait-for-it.sh:/usr/src/app/wait-for-it.sh
+    links:
+      - "marquez-db:postgres"
+    depends_on:
+      - marquez-db
+    entrypoint: ["./wait-for-it.sh", "db:5432", "--", "./entrypoint.sh"]
+
+  marquez-web:
+    image: "marquezproject/marquez-web:latest"
+    container_name: marquez-web
+    environment:
+      - MARQUEZ_HOST=marquez-api
+      - MARQUEZ_PORT=6000
+    ports:
+      - "3000:3000"
+    stdin_open: true
+    tty: true
+    depends_on:
+      - marquez-api
+
+  marquez-db:
+    image: postgres:12.1
+    container_name: marquez-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - MARQUEZ_DB=marquez
+      - MARQUEZ_USER=marquez
+      - MARQUEZ_PASSWORD=marquez
+    volumes:
+      - ./docker/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh

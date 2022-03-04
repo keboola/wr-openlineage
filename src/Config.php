@@ -2,15 +2,24 @@
 
 declare(strict_types=1);
 
-namespace MyComponent;
+namespace Keboola\OpenLineageWriter;
 
 use Keboola\Component\Config\BaseConfig;
 
 class Config extends BaseConfig
 {
-    // @todo implement your custom getters
-    public function getFoo(): string
+    public function getOpenLineageUrl(): string
     {
-        return $this->getValue(['parameters', 'foo']);
+        return $this->getStringValue(['parameters', 'openlineage_api_url']);
+    }
+
+    public function getCreatedTimeFrom(): string
+    {
+        return $this->getStringValue(['parameters', 'created_time_from']);
+    }
+
+    public function getJobNameAsConfig(): bool
+    {
+        return (bool) $this->getValue(['parameters', 'job_name_as_config']);
     }
 }

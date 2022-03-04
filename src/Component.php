@@ -2,15 +2,61 @@
 
 declare(strict_types=1);
 
-namespace MyComponent;
+namespace Keboola\OpenLineageWriter;
 
+use DateTimeImmutable;
+use GuzzleHttp\Client;
 use Keboola\Component\BaseComponent;
+use Keboola\Component\UserException;
+use Keboola\StorageApi\Client as StorageClient;
+use Throwable;
 
 class Component extends BaseComponent
 {
     protected function run(): void
     {
-        // @TODO implement
+        $storageUrl = (string) getenv('KBC_URL');
+        $storageToken = (string) getenv('KBC_TOKEN');
+
+        /** @var Config $config */
+        $config = $this->getConfig();
+
+        $storageClient = new StorageClient([
+            'token' => $storageToken,
+            'url' => $storageUrl,
+        ]);
+
+        $queueClient = new Client([
+            'base_uri' => $storageClient->getServiceUrl('queue'),
+            'headers' => [
+                'X-StorageApi-Token' => $storageToken,
+            ],
+        ]);
+
+        $openLineageClient = new Client([
+            'base_uri' => $config->getOpenLineageUrl(),
+            'headers' => [
+                'Content-Type' => 'application/json',
+            ],
+        ]);
+
+        try {
+            $createdTimeFrom = new DateTimeImmutable($config->getCreatedTimeFrom());
+        } catch (Throwable $e) {
+            throw new UserException(sprintf(
+                'Unable to parse "created_time_from": %s',
+                $e->getMessage()
+            ));
+        }
+
+        $openLineageWriter = new OpenLineageWriter(
+            $queueClient,
+            $openLineageClient,
+            $this->getLogger(),
+            $createdTimeFrom
+        );
+
+        $openLineageWriter->write();
     }
 
     protected function getConfigClass(): string
