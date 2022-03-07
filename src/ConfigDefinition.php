@@ -19,6 +19,12 @@ class ConfigDefinition extends BaseConfigDefinition
                 ->scalarNode('openlineage_api_url')
                     ->isRequired()
                 ->end()
+                ->scalarNode('created_time_from')
+                    ->isRequired()
+                ->end()
+                ->booleanNode('job_name_as_config')
+                    ->defaultFalse()
+                ->end()
             ->end()
         ;
         // @formatter:on
