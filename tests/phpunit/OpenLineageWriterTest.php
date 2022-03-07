@@ -13,6 +13,7 @@ use GuzzleHttp\Psr7\Response;
 use Keboola\OpenLineageWriter\OpenLineageWriter;
 use Keboola\StorageApi\Client as StorageClient;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Log\Test\TestLogger;
 
 class OpenLineageWriterTest extends TestCase
@@ -32,21 +33,30 @@ class OpenLineageWriterTest extends TestCase
         );
     }
 
+//    private function getMarquezClient(): Client
+//    {
+//        return new Client([
+//            'base_uri' => 'http://marquez-api/api/v1/',
+//            'headers' => [
+//                'Content-Type' => 'application/json',
+//            ],
+//        ]);
+//    }
+
     public function testWrite(): void
     {
-        $storageUrl = (string) getenv('KBC_URL');
         $storageToken = (string) getenv('KBC_TOKEN');
-
-        $storageClient = new StorageClient([
-            'token' => $storageToken,
-            'url' => $storageUrl,
-        ]);
 
         $mockHandler = new MockHandler([
             new Response(
                 200,
                 ['Content-Type' => 'application/json'],
                 self::JOB_LIST_RESPONSE
+            ),
+            new Response(
+                200,
+                ['Content-Type' => 'application/json'],
+                self::JOB_LINEAGE_RESPONSE
             ),
             new Response(
                 200,
@@ -80,7 +90,35 @@ class OpenLineageWriterTest extends TestCase
 
         $openLineageWriter->write();
 
-        var_dump($testLogger->records);
+        $this->assertTrue($testLogger->hasInfoThatContains('Job 123 import to OpenLineage API - start'));
+        $this->assertTrue($testLogger->hasInfoThatContains('Job 123 import to OpenLineage API - end'));
+        $this->assertTrue($testLogger->hasInfoThatContains('Job 124 import to OpenLineage API - start'));
+        $this->assertTrue($testLogger->hasInfoThatContains('Job 124 import to OpenLineage API - end'));
+
+        $expectedNamespace = 'connection.north-europe.azure.keboola.com/project/1234';
+        $response = $openLineageClient->get('api/v1/namespaces');
+        $responseBody = $this->decodeResponse($response);
+        $this->assertEquals($expectedNamespace, $responseBody['namespaces'][0]['name']);
+
+        $response = $openLineageClient->get('api/v1/namespaces/' . urlencode($expectedNamespace) . '/jobs');
+        $responseBody = $this->decodeResponse($response);
+        $job = $responseBody['jobs'][0];
+
+        $this->assertEquals($expectedNamespace, $job['id']['namespace']);
+        $this->assertEquals('keboola.snowflake-transformation-123456', $job['id']['name']);
+        $this->assertEquals($expectedNamespace, $job['namespace']);
+        $this->assertEquals('keboola.snowflake-transformation-123456', $job['name']);
+        $this->assertEquals($expectedNamespace, $job['inputs'][0]['namespace']);
+        $this->assertEquals(
+            'in.c-kds-team-ex-shoptet-permalink-1234567.orders',
+            $job['inputs'][0]['name']
+        );
+        $this->assertEquals($expectedNamespace, $job['outputs'][0]['namespace']);
+        $this->assertEquals(
+            'out.c-orders.dailyStats',
+            $job['outputs'][0]['name']
+        );
+        $this->assertEquals('keboola.orchestrator-123', $job['latestRun']['facets']['parent']['job']['name']);
     }
 
     private const JOB_LIST_RESPONSE = '[
@@ -172,7 +210,7 @@ class OpenLineageWriterTest extends TestCase
             "outputs": [
               {
                 "namespace": "connection.north-europe.azure.keboola.com/project/1234",
-                "name": "out.c-orders.dailyStats\"",
+                "name": "out.c-orders.dailyStats",
                 "facets": {
                   "schema": {
                     "_producer": "https://connection.north-europe.azure.keboola.com",
@@ -194,4 +232,9 @@ class OpenLineageWriterTest extends TestCase
             ]
             }
         ]';
+
+    private function decodeResponse(ResponseInterface $response): array
+    {
+        return (array) json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+    }
 }

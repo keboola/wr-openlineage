@@ -44,7 +44,7 @@ class OpenLineageWriter
                 ]);
             }
 
-            $this->logger->info(sprintf('Job %s export to Marquez - end', $job['id']));
+            $this->logger->info(sprintf('Job %s import to OpenLineage API - end', $job['id']));
         }
 
         $this->logger->info('Done');

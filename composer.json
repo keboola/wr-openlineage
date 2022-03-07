@@ -26,8 +26,10 @@
         }
     },
     "scripts": {
+        "wait-for-marquez": "./docker/wait-for-it.sh -t 60 marquez-api:6000 -- echo \"Marquez is up\"",
         "tests-phpunit": "phpunit",
         "tests": [
+            "@wait-for-marquez",
             "@tests-phpunit"
         ],
 
