@@ -11,21 +11,20 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use Keboola\OpenLineageWriter\OpenLineageWriter;
-use Keboola\StorageApi\Client as StorageClient;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\Test\TestLogger;
 
 class OpenLineageWriterTest extends TestCase
 {
-    private function getQueueClient(string $storageToken, array $options): Client
+    private function getQueueClient(array $options): Client
     {
         return new Client(
             array_merge(
                 [
                     'base_uri' => 'http://example.com/',
                     'headers' => [
-                        'X-StorageApi-Token' => $storageToken,
+                        'X-StorageApi-Token' => 'token',
                     ],
                 ],
                 $options
@@ -33,20 +32,8 @@ class OpenLineageWriterTest extends TestCase
         );
     }
 
-//    private function getMarquezClient(): Client
-//    {
-//        return new Client([
-//            'base_uri' => 'http://marquez-api/api/v1/',
-//            'headers' => [
-//                'Content-Type' => 'application/json',
-//            ],
-//        ]);
-//    }
-
     public function testWrite(): void
     {
-        $storageToken = (string) getenv('KBC_TOKEN');
-
         $mockHandler = new MockHandler([
             new Response(
                 200,
@@ -69,7 +56,7 @@ class OpenLineageWriterTest extends TestCase
         $history = Middleware::history($requestHistory);
         $stack = HandlerStack::create($mockHandler);
         $stack->push($history);
-        $queueClient = $this->getQueueClient($storageToken, ['handler' => $stack]);
+        $queueClient = $this->getQueueClient(['handler' => $stack]);
 
         $openLineageClient = new Client([
             'base_uri' => (string) getenv('OPENLINEAGE_API'),

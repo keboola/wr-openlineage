@@ -8,7 +8,6 @@ services:
 #      - ssh-keys:/root/.ssh:ro
     environment:
       - KBC_URL=${STORAGE_API_URL}
-      - KBC_TOKEN=${STORAGE_API_TOKEN}
       - OPENLINEAGE_API=http://marquez-api:6000
     depends_on:
       - marquez-api

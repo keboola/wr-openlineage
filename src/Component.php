@@ -53,7 +53,8 @@ class Component extends BaseComponent
             $queueClient,
             $openLineageClient,
             $this->getLogger(),
-            $createdTimeFrom
+            $createdTimeFrom,
+            $config->getJobNameAsConfig()
         );
 
         $openLineageWriter->write();
