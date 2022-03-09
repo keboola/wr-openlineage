@@ -1,8 +1,8 @@
-# my-component
+# wr-openlineage
 
-[![Build Status](https://travis-ci.com/keboola/my-component.svg?branch=master)](https://travis-ci.com/keboola/my-component)
+![Build status](https://github.com/keboola/wr-openlineage/actions/workflows/push.yml/badge.svg)
 
-> Fill in description
+This component will push jobs metadata obtained from [Job Queue API open-api-lineage endpoint](https://app.swaggerhub.com/apis-docs/keboola/job-queue-api/1.2.6#/Jobs/getJobOpenApiLineage) into a data lineage service supporting OpenLineage API (e.g. Marquez).
 
 # Usage
 
@@ -13,8 +13,8 @@
 Clone this repository and init the workspace with following command:
 
 ```
-git clone https://github.com/keboola/my-component
-cd my-component
+git clone https://github.com/keboola/wr-openlineage
+cd wr-openlineage
 docker-compose build
 docker-compose run --rm dev composer install --no-scripts
 ```
