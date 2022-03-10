@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use GuzzleHttp\Client;
 use Keboola\Component\BaseComponent;
 use Keboola\Component\UserException;
+use Keboola\SSHTunnel\SSH;
 use Keboola\StorageApi\Client as StorageClient;
 use Throwable;
 
@@ -33,12 +34,8 @@ class Component extends BaseComponent
             ],
         ]);
 
-        $openLineageClient = new Client([
-            'base_uri' => $config->getOpenLineageUrl(),
-            'headers' => [
-                'Content-Type' => 'application/json',
-            ],
-        ]);
+        $openLineageClientFactory = new OpenLineageClientFactory($this->getLogger(), $config);
+        $openLineageClient = $openLineageClientFactory->getClient();
 
         try {
             $createdTimeFrom = new DateTimeImmutable($config->getCreatedTimeFrom());

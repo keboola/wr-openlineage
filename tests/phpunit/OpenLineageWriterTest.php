@@ -10,13 +10,30 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Psr7\Uri;
+use Keboola\OpenLineageWriter\Config;
+use Keboola\OpenLineageWriter\ConfigDefinition;
+use Keboola\OpenLineageWriter\OpenLineageClientFactory;
 use Keboola\OpenLineageWriter\OpenLineageWriter;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\Test\TestLogger;
+use Symfony\Component\Process\Process;
 
 class OpenLineageWriterTest extends TestCase
 {
+    public function setUp(): void
+    {
+        $this->closeSshTunnel();
+        parent::setUp();
+    }
+
+    private function closeSshTunnel(): void
+    {
+        $process = new Process(['sh', '-c', 'pgrep ssh | xargs -r kill']);
+        $process->mustRun();
+    }
+
     private function getQueueClient(array $options): Client
     {
         return new Client(
@@ -30,6 +47,22 @@ class OpenLineageWriterTest extends TestCase
                 $options
             )
         );
+    }
+
+    private function getConfig(): Config
+    {
+        return new Config([
+            'parameters' => [
+                'openlineage_api_url' => (string) getenv('OPENLINEAGE_API'),
+                'created_time_from' => '-1 day',
+                'ssh' => [
+                    'enabled' => true,
+                    '#key_private' => (string) file_get_contents('/root/.ssh/id_rsa'),
+                    'ssh_host' => 'sshproxy',
+                    'user' => 'root',
+                ],
+            ],
+        ], new ConfigDefinition());
     }
 
     public function testWrite(): void
@@ -58,21 +91,21 @@ class OpenLineageWriterTest extends TestCase
         $stack->push($history);
         $queueClient = $this->getQueueClient(['handler' => $stack]);
 
-        $openLineageClient = new Client([
-            'base_uri' => (string) getenv('OPENLINEAGE_API'),
-            'headers' => [
-                'Content-Type' => 'application/json',
-            ],
-        ]);
-
-        $createdTimeFrom = new DateTimeImmutable('-1 day');
-
         $testLogger = new TestLogger();
+
+        $config = $this->getConfig();
+        $openLineageClientFactory = new OpenLineageClientFactory($testLogger, $config);
+        $openLineageClient = $openLineageClientFactory->getClient();
+
+        /** @var Uri $baseUri */
+        $baseUri = $openLineageClient->getConfig('base_uri');
+        self::assertEquals('http://127.0.0.1:19200', $baseUri);
+
         $openLineageWriter = new OpenLineageWriter(
             $queueClient,
             $openLineageClient,
             $testLogger,
-            $createdTimeFrom
+            new DateTimeImmutable($config->getCreatedTimeFrom())
         );
 
         $openLineageWriter->write();
