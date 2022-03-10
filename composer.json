@@ -5,6 +5,8 @@
     "require": {
         "php": "^8.1",
         "keboola/php-component": "^9.0",
+        "keboola/retry": "^0.5.0",
+        "keboola/ssh-tunnel": "^2.0",
         "keboola/storage-api-client": "^12.10"
     },
     "require-dev": {
@@ -26,7 +28,7 @@
         }
     },
     "scripts": {
-        "wait-for-marquez": "./docker/wait-for-it.sh -t 60 marquez-api:6000 -- echo \"Marquez is up\"",
+        "wait-for-marquez": "./docker/wait-for-it.sh -t 60 marquez-api:6000",
         "tests-phpunit": "phpunit",
         "tests": [
             "@wait-for-marquez",

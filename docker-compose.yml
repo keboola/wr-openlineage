@@ -4,19 +4,21 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-#    volumes:
-#      - ssh-keys:/root/.ssh:ro
+    volumes:
+      - ssh-keys:/root/.ssh:ro
     environment:
       - KBC_URL=${STORAGE_API_URL}
       - OPENLINEAGE_API=http://marquez-api:6000
     depends_on:
       - marquez-api
+      - sshproxy
 
   dev:
     <<: *tests
     volumes:
       - ./:/code
       - ./data:/data
+      - ssh-keys:/root/.ssh
 
   marquez-api:
     image: "marquezproject/marquez:latest"
@@ -61,3 +63,13 @@ services:
       - MARQUEZ_PASSWORD=marquez
     volumes:
       - ./docker/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+
+  sshproxy:
+    image: keboola/db-component-ssh-proxy:latest
+    volumes:
+      - ssh-keys:/root/.ssh
+    depends_on:
+      - marquez-api
+
+volumes:
+  ssh-keys:
