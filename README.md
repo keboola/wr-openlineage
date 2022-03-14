@@ -6,7 +6,11 @@ This component will push jobs metadata obtained from [Job Queue API open-api-lin
 
 # Usage
 
-> fill in usage instructions
+- Set up your OpenLineage API if you don't have one already e.g. Marquez (https://marquezproject.github.io/marquez/running-on-aws.html)
+- In the component configuration, set `openlineage_api_url` to hostname of your API  
+- Set `created_time_from` - all Keboola Connection jobs from this point will be imported into your OpenLineage API
+- Configure SSH proxy if needed
+
 
 ## Development
  
@@ -27,4 +31,4 @@ docker-compose run --rm dev composer tests
  
 # Integration
 
-For information about deployment and integration with KBC, please refer to the [deployment section of developers documentation](https://developers.keboola.com/extend/component/deployment/) 
+For information about deployment and integration with KBC, please refer to the [deployment section of developers documentation](https://developers.keboola.com/extend/component/deployment/)
