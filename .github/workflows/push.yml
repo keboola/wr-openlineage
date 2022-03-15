@@ -5,7 +5,7 @@ concurrency: 'ci-${{ github.ref }}'
 env:
     APP_IMAGE: wr-openlineage
     KBC_DEVELOPERPORTAL_VENDOR: keboola
-    KBC_DEVELOPERPORTAL_APP: keboola.wr-openlineage-2
+    KBC_DEVELOPERPORTAL_APP: keboola.wr-openlineage
     KBC_DEVELOPERPORTAL_USERNAME: keboola+wr_openlineage
     KBC_DEVELOPERPORTAL_PASSWORD: '${{ secrets.KBC_DEVELOPERPORTAL_PASSWORD }}'
     DOCKERHUB_USER: keboolabot
