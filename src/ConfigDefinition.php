@@ -20,9 +20,11 @@ class ConfigDefinition extends BaseConfigDefinition
             ->children()
                 ->scalarNode('openlineage_api_url')
                     ->isRequired()
+                    ->cannotBeEmpty()
                 ->end()
                 ->scalarNode('created_time_from')
                     ->isRequired()
+                    ->cannotBeEmpty()
                 ->end()
                 ->booleanNode('job_name_as_config')
                     ->defaultFalse()
@@ -40,12 +42,25 @@ class ConfigDefinition extends BaseConfigDefinition
         /** @var ArrayNodeDefinition $node */
         $node = $builder->getRootNode();
 
+        // @formatter:off
+        /** @noinspection NullPointerExceptionInspection */
         $node
             ->children()
-                ->booleanNode('enabled')->end()
-                ->scalarNode('#key_private')->end()
-                ->scalarNode('ssh_host')->end()
-                ->scalarNode('user')->end()
+                ->booleanNode('enabled')
+                    ->isRequired()
+                ->end()
+                ->scalarNode('#key_private')
+                    ->isRequired()
+                    ->cannotBeEmpty()
+                ->end()
+                ->scalarNode('ssh_host')
+                    ->isRequired()
+                    ->cannotBeEmpty()
+                ->end()
+                ->scalarNode('user')
+                    ->isRequired()
+                    ->cannotBeEmpty()
+                ->end()
             ->end()
         ;
 
