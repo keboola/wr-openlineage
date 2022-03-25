@@ -9,6 +9,7 @@ use GuzzleHttp\Client;
 use Keboola\Component\BaseComponent;
 use Keboola\Component\UserException;
 use Keboola\SSHTunnel\SSH;
+use Keboola\SSHTunnel\SSHException;
 use Keboola\StorageApi\Client as StorageClient;
 use Throwable;
 

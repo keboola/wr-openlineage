@@ -10,6 +10,10 @@ This component will push jobs metadata obtained from [Job Queue API open-api-lin
 - In the component configuration, set `openlineage_api_url` to hostname of your API  
 - Set `created_time_from` - all Keboola Connection jobs from this point will be imported into your OpenLineage API
 - Configure SSH proxy if needed
+  - set hostname of you SSH server `ssh_host`
+  - set user with whom you connect to your SSH server
+  - paste your private key into the `#key_private`
+  - you can enable/disable SSH proxy with `enabled`, you credentials will remain stored
 
 
 ## Development

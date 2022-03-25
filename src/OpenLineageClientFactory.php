@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Keboola\OpenLineageWriter;
 
 use GuzzleHttp\Client;
+use Keboola\Component\UserException;
 use Keboola\SSHTunnel\SSH;
+use Keboola\SSHTunnel\SSHException;
 use Psr\Log\LoggerInterface;
+use Retry\RetryException;
 
 class OpenLineageClientFactory
 {
@@ -32,8 +35,12 @@ class OpenLineageClientFactory
         $parameters = $config->getParameters();
         if (isset($parameters['ssh']) && $parameters['ssh']['enabled']) {
             $parsedUrl = (array) parse_url($openLineageUrl);
-            $sshTunnel = new SshTunnel(new SSH(), $this->logger);
-            $sshTunnel->open($parameters['ssh'], $parsedUrl);
+            try {
+                $sshTunnel = new SshTunnel(new SSH(), $this->logger);
+                $sshTunnel->open($parameters['ssh'], $parsedUrl);
+            } catch (SSHException | RetryException $e) {
+                throw new UserException('Unable to open SSH tunnel');
+            }
 
             return sprintf(
                 '%s://%s:%s',
