@@ -125,7 +125,7 @@ class OpenLineageWriterTest extends TestCase
         $job = $responseBody['jobs'][0];
 
         $this->assertEquals($expectedNamespace, $job['id']['namespace']);
-        $this->assertEquals('keboola.snowflake-transformation-123456', $job['id']['name']);
+        $this->assertEquals('keboola', $job['id']['name']);
         $this->assertEquals($expectedNamespace, $job['namespace']);
         $this->assertEquals('keboola.snowflake-transformation-123456', $job['name']);
         $this->assertEquals($expectedNamespace, $job['inputs'][0]['namespace']);
