@@ -127,7 +127,7 @@ class OpenLineageWriterTest extends TestCase
         $this->assertEquals($expectedNamespace, $job['id']['namespace']);
         $this->assertEquals('keboola', $job['id']['name']);
         $this->assertEquals($expectedNamespace, $job['namespace']);
-        $this->assertEquals('keboola.snowflake-transformation-123456', $job['name']);
+        $this->assertEquals('keboola', $job['name']);
         $this->assertEquals($expectedNamespace, $job['inputs'][0]['namespace']);
         $this->assertEquals(
             'in.c-kds-team-ex-shoptet-permalink-1234567.orders',
