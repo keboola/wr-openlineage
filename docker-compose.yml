@@ -38,7 +38,7 @@ services:
     entrypoint: ["./wait-for-it.sh", "db:5432", "--", "./entrypoint.sh"]
 
   marquez-web:
-    image: "marquezproject/marquez-web:0.19.1"
+    image: "marquezproject/marquez-web:0.18.0"
     container_name: marquez-web
     environment:
       - MARQUEZ_HOST=marquez-api
