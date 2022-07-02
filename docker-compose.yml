@@ -21,7 +21,7 @@ services:
       - ssh-keys:/root/.ssh
 
   marquez-api:
-    image: "marquezproject/marquez:latest"
+    image: "marquezproject/marquez:0.17.0"
     container_name: marquez-api
     environment:
       - MARQUEZ_PORT=6000
