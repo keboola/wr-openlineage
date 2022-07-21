@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Keboola\OpenLineageWriter\Tests;
 
 use DateTimeImmutable;
+use Generator;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Uri;
+use Keboola\Component\UserException;
 use Keboola\OpenLineageWriter\Config;
 use Keboola\OpenLineageWriter\ConfigDefinition;
 use Keboola\OpenLineageWriter\OpenLineageClientFactory;
@@ -141,6 +143,60 @@ class OpenLineageWriterTest extends TestCase
         $this->assertEquals('keboola.orchestrator-123', $job['latestRun']['facets']['parent']['job']['name']);
     }
 
+    /** @dataProvider lineageErrorHostnameProvider */
+    public function testWriteLineageClientException(string $url, string $expectedExceptionMessage): void
+    {
+        $mockHandler = new MockHandler([
+            new Response(
+                200,
+                ['Content-Type' => 'application/json'],
+                self::JOB_LIST_RESPONSE
+            ),
+            new Response(
+                200,
+                ['Content-Type' => 'application/json'],
+                self::JOB_LINEAGE_RESPONSE
+            ),
+            new Response(
+                200,
+                ['Content-Type' => 'application/json'],
+                self::JOB_LINEAGE_RESPONSE
+            ),
+        ]);
+        // Add the history middleware to the handler stack.
+        $requestHistory = [];
+        $history = Middleware::history($requestHistory);
+        $stack = HandlerStack::create($mockHandler);
+        $stack->push($history);
+        $queueClient = $this->getQueueClient(['handler' => $stack]);
+
+        $testLogger = new TestLogger();
+
+        $config = new Config([
+            'parameters' => [
+                'openlineage_api_url' => $url,
+                'created_time_from' => '-1 day',
+            ],
+        ], new ConfigDefinition());
+        $openLineageClientFactory = new OpenLineageClientFactory($testLogger, $config);
+        $openLineageClient = $openLineageClientFactory->getClient([
+            'timeout' => 1,
+            'connect_timeout' => 1,
+        ]);
+
+        $openLineageWriter = new OpenLineageWriter(
+            $queueClient,
+            $openLineageClient,
+            $testLogger,
+            new DateTimeImmutable($config->getCreatedTimeFrom())
+        );
+
+        $this->expectException(UserException::class);
+        $this->expectExceptionMessage($expectedExceptionMessage);
+
+        $openLineageWriter->write();
+    }
+
     private const JOB_LIST_RESPONSE = '[
         {
             "id": "123",
@@ -256,5 +312,18 @@ class OpenLineageWriterTest extends TestCase
     private function decodeResponse(ResponseInterface $response): array
     {
         return (array) json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+    }
+
+    public function lineageErrorHostnameProvider(): Generator
+    {
+        yield 'malformed' => [
+                'url' => 'batzilla',
+                'expected exception' => 'Malformed URL of OpenLineage server',
+            ];
+
+        yield 'unresolved' => [
+                'url' => 'http://wrong-api:4567',
+                'expected exception' => 'cURL error 6: Could not resolve host: wrong-api',
+            ];
     }
 }
