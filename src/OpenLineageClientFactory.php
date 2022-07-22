@@ -19,14 +19,17 @@ class OpenLineageClientFactory
     ) {
     }
 
-    public function getClient(): Client
+    public function getClient(array $options = []): Client
     {
-        return new Client([
-            'base_uri' => $this->getOpenLineageUrl($this->config),
-            'headers' => [
-                'Content-Type' => 'application/json',
+        return new Client(array_merge(
+            [
+                'base_uri' => $this->getOpenLineageUrl($this->config),
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                ],
             ],
-        ]);
+            $options
+        ));
     }
 
     private function getOpenLineageUrl(Config $config): string

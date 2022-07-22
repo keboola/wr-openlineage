@@ -6,8 +6,11 @@ namespace Keboola\OpenLineageWriter;
 
 use DateTimeImmutable;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use Keboola\Component\UserException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 class OpenLineageWriter
 {
@@ -33,15 +36,25 @@ class OpenLineageWriter
             }
             $this->logger->info(sprintf('Job %s import to OpenLineage API - start', $job['id']));
 
-            $lineAgeResponse = $this->getJobLineage($job['id']);
-            foreach ($lineAgeResponse as $event) {
+            $lineageResponse = $this->getJobLineage($job['id']);
+            foreach ($lineageResponse as $event) {
                 if ($this->jobNameAsConfig) {
                     $event['job']['name'] = sprintf('%s-%s', $job['component'], $job['config']);
                 }
                 $this->logger->info(sprintf('- Sending %s event', $event['eventType']));
-                $this->openLineageClient->request('POST', '/api/v1/lineage', [
-                    'body' => json_encode($event),
-                ]);
+
+                try {
+                    $this->openLineageClient->request('POST', '/api/v1/lineage', [
+                        'body' => json_encode($event),
+                    ]);
+                } catch (RequestException $e) {
+                    if (str_contains($e->getMessage(), 'cURL error 3:')) {
+                        throw new UserException('Malformed URL of OpenLineage server');
+                    }
+                    throw new UserException($e->getMessage());
+                } catch (Throwable $e) {
+                    throw new UserException($e->getMessage());
+                }
             }
 
             $this->logger->info(sprintf('Job %s import to OpenLineage API - end', $job['id']));
