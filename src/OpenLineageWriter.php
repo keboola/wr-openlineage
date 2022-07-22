@@ -10,6 +10,7 @@ use GuzzleHttp\Exception\RequestException;
 use Keboola\Component\UserException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 class OpenLineageWriter
 {
@@ -50,6 +51,8 @@ class OpenLineageWriter
                     if (str_contains($e->getMessage(), 'cURL error 3:')) {
                         throw new UserException('Malformed URL of OpenLineage server');
                     }
+                    throw new UserException($e->getMessage());
+                } catch (Throwable $e) {
                     throw new UserException($e->getMessage());
                 }
             }

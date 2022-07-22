@@ -7,9 +7,11 @@ namespace Keboola\OpenLineageWriter\Tests;
 use DateTimeImmutable;
 use Generator;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
+use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Uri;
 use Keboola\Component\UserException;
@@ -19,6 +21,7 @@ use Keboola\OpenLineageWriter\OpenLineageClientFactory;
 use Keboola\OpenLineageWriter\OpenLineageWriter;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Log\NullLogger;
 use Psr\Log\Test\TestLogger;
 use Symfony\Component\Process\Process;
 
@@ -69,30 +72,7 @@ class OpenLineageWriterTest extends TestCase
 
     public function testWrite(): void
     {
-        $mockHandler = new MockHandler([
-            new Response(
-                200,
-                ['Content-Type' => 'application/json'],
-                self::JOB_LIST_RESPONSE
-            ),
-            new Response(
-                200,
-                ['Content-Type' => 'application/json'],
-                self::JOB_LINEAGE_RESPONSE
-            ),
-            new Response(
-                200,
-                ['Content-Type' => 'application/json'],
-                self::JOB_LINEAGE_RESPONSE
-            ),
-        ]);
-        // Add the history middleware to the handler stack.
-        $requestHistory = [];
-        $history = Middleware::history($requestHistory);
-        $stack = HandlerStack::create($mockHandler);
-        $stack->push($history);
-        $queueClient = $this->getQueueClient(['handler' => $stack]);
-
+        $queueClient = $this->mockQueueClient();
         $testLogger = new TestLogger();
 
         $config = $this->getConfig();
@@ -146,29 +126,7 @@ class OpenLineageWriterTest extends TestCase
     /** @dataProvider lineageErrorHostnameProvider */
     public function testWriteLineageClientException(string $url, string $expectedExceptionMessage): void
     {
-        $mockHandler = new MockHandler([
-            new Response(
-                200,
-                ['Content-Type' => 'application/json'],
-                self::JOB_LIST_RESPONSE
-            ),
-            new Response(
-                200,
-                ['Content-Type' => 'application/json'],
-                self::JOB_LINEAGE_RESPONSE
-            ),
-            new Response(
-                200,
-                ['Content-Type' => 'application/json'],
-                self::JOB_LINEAGE_RESPONSE
-            ),
-        ]);
-        // Add the history middleware to the handler stack.
-        $requestHistory = [];
-        $history = Middleware::history($requestHistory);
-        $stack = HandlerStack::create($mockHandler);
-        $stack->push($history);
-        $queueClient = $this->getQueueClient(['handler' => $stack]);
+        $queueClient = $this->mockQueueClient();
 
         $testLogger = new TestLogger();
 
@@ -193,6 +151,38 @@ class OpenLineageWriterTest extends TestCase
 
         $this->expectException(UserException::class);
         $this->expectExceptionMessage($expectedExceptionMessage);
+
+        $openLineageWriter->write();
+    }
+
+    public function lineageErrorHostnameProvider(): Generator
+    {
+        yield 'malformed' => [
+            'url' => 'batzilla',
+            'expected exception' => 'Malformed URL of OpenLineage server',
+        ];
+
+        yield 'unresolved' => [
+            'url' => 'http://wrong-api:4567',
+            'expected exception' => 'cURL error 6: Could not resolve host: wrong-api',
+        ];
+    }
+
+    public function testWriteLineageClientServerError(): void
+    {
+        $queueClient = $this->mockQueueClient();
+
+        $openLineageClient = $this->mockOpenlineageClientError();
+
+        $openLineageWriter = new OpenLineageWriter(
+            $queueClient,
+            $openLineageClient,
+            new NullLogger(),
+            new DateTimeImmutable('-7 days')
+        );
+
+        $this->expectException(UserException::class);
+        $this->expectExceptionMessage('Error Communicating with Server');
 
         $openLineageWriter->write();
     }
@@ -314,16 +304,54 @@ class OpenLineageWriterTest extends TestCase
         return (array) json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
     }
 
-    public function lineageErrorHostnameProvider(): Generator
+    private function mockQueueClient(): Client
     {
-        yield 'malformed' => [
-                'url' => 'batzilla',
-                'expected exception' => 'Malformed URL of OpenLineage server',
-            ];
+        $mockHandler = new MockHandler([
+            new Response(
+                200,
+                ['Content-Type' => 'application/json'],
+                self::JOB_LIST_RESPONSE
+            ),
+            new Response(
+                200,
+                ['Content-Type' => 'application/json'],
+                self::JOB_LINEAGE_RESPONSE
+            ),
+            new Response(
+                200,
+                ['Content-Type' => 'application/json'],
+                self::JOB_LINEAGE_RESPONSE
+            ),
+        ]);
+        // Add the history middleware to the handler stack.
+        $requestHistory = [];
+        $history = Middleware::history($requestHistory);
+        $stack = HandlerStack::create($mockHandler);
+        $stack->push($history);
 
-        yield 'unresolved' => [
-                'url' => 'http://wrong-api:4567',
-                'expected exception' => 'cURL error 6: Could not resolve host: wrong-api',
-            ];
+        return $this->getQueueClient(['handler' => $stack]);
+    }
+
+    private function mockOpenlineageClientError(): Client
+    {
+        $mockHandler = new MockHandler([
+            new RequestException(
+                'Error Communicating with Server',
+                new Request('POST', '/api/v1/lineage')
+            ),
+        ]);
+        $stack = HandlerStack::create($mockHandler);
+
+        return new Client(
+            array_merge(
+                [
+                    'base_uri' => 'http://example.com/',
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                    ],
+                    'handler' => $stack,
+                ],
+            )
+        );
     }
 }
