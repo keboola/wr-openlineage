@@ -22,4 +22,9 @@ class Config extends BaseConfig
     {
         return (bool) $this->getValue(['parameters', 'job_name_as_config']);
     }
+
+    public function getOpenLineageEndpoint(): string
+    {
+        return $this->getStringValue(['parameters', 'openlineage_api_endpoint'], '/api/v1/lineage');
+    }
 }

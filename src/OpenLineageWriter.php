@@ -19,6 +19,7 @@ class OpenLineageWriter
         private Client $openLineageClient,
         private LoggerInterface $logger,
         private DateTimeImmutable $createdTimeFrom,
+        private string $openLineageEndpoint,
         private bool $jobNameAsConfig = false
     ) {
     }
@@ -44,7 +45,7 @@ class OpenLineageWriter
                 $this->logger->info(sprintf('- Sending %s event', $event['eventType']));
 
                 try {
-                    $this->openLineageClient->request('POST', '/api/v1/lineage', [
+                    $this->openLineageClient->request('POST', $this->openLineageEndpoint, [
                         'body' => json_encode($event),
                     ]);
                 } catch (RequestException $e) {
