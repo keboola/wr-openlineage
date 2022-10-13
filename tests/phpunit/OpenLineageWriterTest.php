@@ -87,7 +87,8 @@ class OpenLineageWriterTest extends TestCase
             $queueClient,
             $openLineageClient,
             $testLogger,
-            new DateTimeImmutable($config->getCreatedTimeFrom())
+            new DateTimeImmutable($config->getCreatedTimeFrom()),
+            $this->getConfig()->getOpenLineageEndpoint()
         );
 
         $openLineageWriter->write();
@@ -146,7 +147,8 @@ class OpenLineageWriterTest extends TestCase
             $queueClient,
             $openLineageClient,
             $testLogger,
-            new DateTimeImmutable($config->getCreatedTimeFrom())
+            new DateTimeImmutable($config->getCreatedTimeFrom()),
+            $this->getConfig()->getOpenLineageEndpoint()
         );
 
         $this->expectException(UserException::class);
@@ -178,7 +180,8 @@ class OpenLineageWriterTest extends TestCase
             $queueClient,
             $openLineageClient,
             new NullLogger(),
-            new DateTimeImmutable('-7 days')
+            new DateTimeImmutable('-7 days'),
+            $this->getConfig()->getOpenLineageEndpoint()
         );
 
         $this->expectException(UserException::class);

@@ -52,6 +52,7 @@ class Component extends BaseComponent
             $openLineageClient,
             $this->getLogger(),
             $createdTimeFrom,
+            $config->getOpenLineageEndpoint(),
             $config->getJobNameAsConfig()
         );
 
