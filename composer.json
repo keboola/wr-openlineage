@@ -4,6 +4,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "keboola/openlineage-generator": "dev-init",
         "keboola/php-component": "^9.0",
         "keboola/retry": "^0.5.0",
         "keboola/ssh-tunnel": "^2.0",
@@ -24,7 +25,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Keboola\\OpenLineageWriter\\\\Tests\\": "tests/phpunit/"
+            "Keboola\\OpenLineageWriter\\Tests\\": "tests/phpunit/"
         }
     },
     "scripts": {
@@ -56,5 +57,11 @@
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/keboola/openlineage-generator.git"
+        }
+    ]
 }

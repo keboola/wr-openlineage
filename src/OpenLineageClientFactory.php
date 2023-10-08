@@ -15,7 +15,7 @@ class OpenLineageClientFactory
 {
     public function __construct(
         private LoggerInterface $logger,
-        private Config $config
+        private Config $config,
     ) {
     }
 
@@ -28,7 +28,7 @@ class OpenLineageClientFactory
                     'Content-Type' => 'application/json',
                 ],
             ],
-            $options
+            $options,
         ));
     }
 
@@ -49,7 +49,7 @@ class OpenLineageClientFactory
                 '%s://%s:%s',
                 $parsedUrl['scheme'] ?? 'http',
                 SshTunnel::LOCAL_HOST,
-                SshTunnel::LOCAL_PORT
+                SshTunnel::LOCAL_PORT,
             );
         }
 

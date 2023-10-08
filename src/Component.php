@@ -8,8 +8,8 @@ use DateTimeImmutable;
 use GuzzleHttp\Client;
 use Keboola\Component\BaseComponent;
 use Keboola\Component\UserException;
-use Keboola\SSHTunnel\SSH;
-use Keboola\SSHTunnel\SSHException;
+use Keboola\OpenLineageGenerator\GeneratorException;
+use Keboola\OpenLineageGenerator\OpenLineageWriter;
 use Keboola\StorageApi\Client as StorageClient;
 use Throwable;
 
@@ -43,7 +43,7 @@ class Component extends BaseComponent
         } catch (Throwable $e) {
             throw new UserException(sprintf(
                 'Unable to parse "created_time_from": %s',
-                $e->getMessage()
+                $e->getMessage(),
             ));
         }
 
@@ -53,10 +53,14 @@ class Component extends BaseComponent
             $this->getLogger(),
             $createdTimeFrom,
             $config->getOpenLineageEndpoint(),
-            $config->getJobNameAsConfig()
+            $config->getJobNameAsConfig(),
         );
 
-        $openLineageWriter->write();
+        try {
+            $openLineageWriter->write();
+        } catch (GeneratorException $e) {
+            throw new UserException($e->getMessage());
+        }
     }
 
     protected function getConfigClass(): string

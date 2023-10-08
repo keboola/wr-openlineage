@@ -27,7 +27,7 @@ try {
             'errCode' => $e->getCode(),
             'errTrace' => $e->getTraceAsString(),
             'errPrevious' => is_object($e->getPrevious()) ? get_class($e->getPrevious()) : '',
-        ]
+        ],
     );
     exit(2);
 }
