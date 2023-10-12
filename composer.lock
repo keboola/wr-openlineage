@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f919f39ad4d79a41aafae321fa5998fc",
+    "content-hash": "d2678e8f072c6ec82ed61d200edc3a4a",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -557,16 +557,16 @@
         },
         {
             "name": "keboola/openlineage-generator",
-            "version": "dev-init",
+            "version": "1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/keboola/openlineage-generator.git",
-                "reference": "2d1e7b5cbc8ee0730d4ec7bf18e806e7f496c159"
+                "reference": "c772663803a7ca18b0330316378c56ce2b7ed881"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/keboola/openlineage-generator/zipball/2d1e7b5cbc8ee0730d4ec7bf18e806e7f496c159",
-                "reference": "2d1e7b5cbc8ee0730d4ec7bf18e806e7f496c159",
+                "url": "https://api.github.com/repos/keboola/openlineage-generator/zipball/c772663803a7ca18b0330316378c56ce2b7ed881",
+                "reference": "c772663803a7ca18b0330316378c56ce2b7ed881",
                 "shasum": ""
             },
             "require": {
@@ -585,38 +585,16 @@
                     "Keboola\\OpenLineageGenerator\\": "src/"
                 }
             },
-            "scripts": {
-                "phpstan": [
-                    "phpstan analyse ./src --level=max --no-progress -c phpstan.neon"
-                ],
-                "phpcs": [
-                    "phpcs -n --ignore=vendor --extensions=php ."
-                ],
-                "phpcbf": [
-                    "phpcbf -n --ignore=vendor --extensions=php ."
-                ],
-                "phplint": [
-                    "parallel-lint -j 10 --exclude vendor ."
-                ],
-                "build": [
-                    "@phplint",
-                    "@phpcs",
-                    "@phpstan"
-                ],
-                "ci": [
-                    "@composer validate --no-check-publish --no-check-all",
-                    "@build"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
             "description": "Generates jobs data for a service with OpenLineage API",
             "support": {
-                "source": "https://github.com/keboola/openlineage-generator/tree/init",
-                "issues": "https://github.com/keboola/openlineage-generator/issues"
+                "issues": "https://github.com/keboola/openlineage-generator/issues",
+                "source": "https://github.com/keboola/openlineage-generator/tree/1.0.0"
             },
-            "time": "2023-10-02T16:44:51+00:00"
+            "time": "2023-10-12T18:15:18+00:00"
         },
         {
             "name": "keboola/php-component",
@@ -4213,9 +4191,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "keboola/openlineage-generator": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
