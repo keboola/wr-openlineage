@@ -14,11 +14,11 @@ use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Uri;
-use Keboola\Component\UserException;
+use Keboola\OpenLineageGenerator\GeneratorException;
+use Keboola\OpenLineageGenerator\OpenLineageWriter;
 use Keboola\OpenLineageWriter\Config;
 use Keboola\OpenLineageWriter\ConfigDefinition;
 use Keboola\OpenLineageWriter\OpenLineageClientFactory;
-use Keboola\OpenLineageWriter\OpenLineageWriter;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\NullLogger;
@@ -49,8 +49,8 @@ class OpenLineageWriterTest extends TestCase
                         'X-StorageApi-Token' => 'token',
                     ],
                 ],
-                $options
-            )
+                $options,
+            ),
         );
     }
 
@@ -88,7 +88,7 @@ class OpenLineageWriterTest extends TestCase
             $openLineageClient,
             $testLogger,
             new DateTimeImmutable($config->getCreatedTimeFrom()),
-            $this->getConfig()->getOpenLineageEndpoint()
+            $this->getConfig()->getOpenLineageEndpoint(),
         );
 
         $openLineageWriter->write();
@@ -114,12 +114,12 @@ class OpenLineageWriterTest extends TestCase
         $this->assertEquals($expectedNamespace, $job['inputs'][0]['namespace']);
         $this->assertEquals(
             'in.c-kds-team-ex-shoptet-permalink-1234567.orders',
-            $job['inputs'][0]['name']
+            $job['inputs'][0]['name'],
         );
         $this->assertEquals($expectedNamespace, $job['outputs'][0]['namespace']);
         $this->assertEquals(
             'out.c-orders.dailyStats',
-            $job['outputs'][0]['name']
+            $job['outputs'][0]['name'],
         );
         $this->assertEquals('keboola.orchestrator-123', $job['latestRun']['facets']['parent']['job']['name']);
     }
@@ -148,10 +148,10 @@ class OpenLineageWriterTest extends TestCase
             $openLineageClient,
             $testLogger,
             new DateTimeImmutable($config->getCreatedTimeFrom()),
-            $this->getConfig()->getOpenLineageEndpoint()
+            $this->getConfig()->getOpenLineageEndpoint(),
         );
 
-        $this->expectException(UserException::class);
+        $this->expectException(GeneratorException::class);
         $this->expectExceptionMessage($expectedExceptionMessage);
 
         $openLineageWriter->write();
@@ -181,10 +181,10 @@ class OpenLineageWriterTest extends TestCase
             $openLineageClient,
             new NullLogger(),
             new DateTimeImmutable('-7 days'),
-            $this->getConfig()->getOpenLineageEndpoint()
+            $this->getConfig()->getOpenLineageEndpoint(),
         );
 
-        $this->expectException(UserException::class);
+        $this->expectException(GeneratorException::class);
         $this->expectExceptionMessage('Error Communicating with Server');
 
         $openLineageWriter->write();
@@ -313,17 +313,17 @@ class OpenLineageWriterTest extends TestCase
             new Response(
                 200,
                 ['Content-Type' => 'application/json'],
-                self::JOB_LIST_RESPONSE
+                self::JOB_LIST_RESPONSE,
             ),
             new Response(
                 200,
                 ['Content-Type' => 'application/json'],
-                self::JOB_LINEAGE_RESPONSE
+                self::JOB_LINEAGE_RESPONSE,
             ),
             new Response(
                 200,
                 ['Content-Type' => 'application/json'],
-                self::JOB_LINEAGE_RESPONSE
+                self::JOB_LINEAGE_RESPONSE,
             ),
         ]);
         // Add the history middleware to the handler stack.
@@ -340,7 +340,7 @@ class OpenLineageWriterTest extends TestCase
         $mockHandler = new MockHandler([
             new RequestException(
                 'Error Communicating with Server',
-                new Request('POST', '/api/v1/lineage')
+                new Request('POST', '/api/v1/lineage'),
             ),
         ]);
         $stack = HandlerStack::create($mockHandler);
@@ -354,7 +354,7 @@ class OpenLineageWriterTest extends TestCase
                     ],
                     'handler' => $stack,
                 ],
-            )
+            ),
         );
     }
 }
