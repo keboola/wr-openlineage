@@ -40,7 +40,7 @@ class SshTunnel
                 'sshHost' => $sshParams['ssh_host'],
                 'sshPort' => 22,
                 'privateKey' => $sshParams['#key_private'],
-            ])
+            ]),
         );
     }
 }
